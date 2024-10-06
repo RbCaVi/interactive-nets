@@ -2,6 +2,7 @@ export type Aux = { type: "aux"; other: Aux; label: string }
 
 export type Tree =
   | { type: "nil"; label?: undefined }
+  | { type: "one"; down: Tree; label?: undefined }
   | { type: "two"; tag: number; left: Tree; right: Tree; label?: undefined }
   | Aux
 
@@ -15,8 +16,16 @@ export function dup(a: Tree, b: Tree): Tree {
   return ctr(1, a, b)
 }
 
+export function swap(a: Tree): Tree {
+  return ctr1(a)
+}
+
 export function ctr(tag: number, a: Tree, b: Tree): Tree {
   return { type: "two", tag, left: a, right: b }
+}
+
+export function ctr1(a: Tree): Tree {
+  return { type: "one", down: a }
 }
 
 export function wire(label: string): [Aux, Aux] {
@@ -66,10 +75,43 @@ export function reduce([a, b]: Pair): Pair[] {
     if (b.type === "nil") {
       return []
     }
+    if (b.type === "one") {
+      return [[nil, b.down]]
+    }
     return [[nil, b.left], [nil, b.right]]
   }
   if (b.type === "nil") {
+    if (a.type === "one") {
+      return [[a.down, nil]]
+    }
     return [[a.left, nil], [a.right, nil]]
+  }
+  if (a.type === "one") {
+    if (b.type === "one") {
+      return [[a.down, b.down]]
+    }
+    const newtag = (b.tag == 1) ? 2 : ((b.tag == 2) ? 1 : b.tag)
+    const [[Dl, dL], [Dr, dR]] = [
+      wire(pairLabel(a.down, b.left)),
+      wire(pairLabel(a.down, b.right)),
+    ]
+    return [
+      [a.down, { type: "two", tag: newtag, left: Dl, right: Dr }],
+      [{ type: "one", down: dL }, b.left],
+      [{ type: "one", down: dR }, b.right],
+    ]
+  }
+  if (b.type === "one") {
+    const newtag = (a.tag == 1) ? 2 : ((a.tag == 2) ? 1 : a.tag)
+    const [[Ld, lD], [Rd, rD]] = [
+      wire(pairLabel(a.left, b.down)),
+      wire(pairLabel(a.right, b.down)),
+    ]
+    return [
+      [a.left, { type: "one", down: Ld }],
+      [a.right, { type: "one", down: Rd }],
+      [{ type: "two", tag: newtag, left: lD, right: rD }, b.down],
+    ]
   }
   if (a.tag === b.tag) {
     return [[a.left, b.left], [a.right, b.right]]

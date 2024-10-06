@@ -1,4 +1,4 @@
-import { Aux, con, ctr, dup, Net, nil, Pair, Tree, wires } from "./net.ts"
+import { Aux, con, ctr, ctr1, dup, Net, nil, Pair, Tree, wires } from "./net.ts"
 
 export type Tokens = {
   next(): string | undefined
@@ -6,7 +6,7 @@ export type Tokens = {
 }
 
 const rIdent = /^[a-zA-Z0-9_.'-]+$/
-const rToken = /\s*([{}()[\]*=]|[a-zA-Z0-9_.'-]+)\s*|(.)/g
+const rToken = /\s*([{}()[\]<>*=]|[a-zA-Z0-9_.'-]+)\s*|(.)/g
 
 function lex(input: string): Tokens {
   const iter = _lex(input)
@@ -49,6 +49,11 @@ function parseTree(tokens: Tokens, wires: Record<string, Aux>): Tree {
       if (isNaN(tag)) throw new Error("expected tag")
       const node = ctr(tag, parseTree(tokens, wires), parseTree(tokens, wires))
       if (tokens.next() !== "}") throw new Error("expected }")
+      return node
+    }
+    case "<": {
+      const node = ctr1(parseTree(tokens, wires))
+      if (tokens.next() !== ">") throw new Error("expected >")
       return node
     }
     case "*": {

@@ -60,7 +60,7 @@ function ctr(tag: number) {
     ]
   }
   if (tag < 8) {
-    const char = " X-+!*&@"[tag]!
+    const char = " Dd-+!*&@"[tag]!
     return [
       `  /${char}\\  `,
       ` /${char.repeat(3)}\\ `,
@@ -78,6 +78,15 @@ function ctr(tag: number) {
   ]
 }
 
+function ctr1() {
+  return [
+    "  /X\\  ",
+    " /XXX\\ ",
+    "/XXXXX\\",
+    "   |   ",
+  ]
+}
+
 const era = [
   "_|_",
   "   ",
@@ -86,6 +95,38 @@ const era = [
 function drawTree(tree: Tree, left = 0): [Diagram, number, [Aux, number][]] {
   if (tree.type === "aux") return [[" | "], 1, [[tree, left + 1]]]
   if (tree.type === "nil") return [era, 1, []]
+  if (tree.type === "one") {
+    const [a, ai, au] = drawTree(tree.down, left)
+    if (ai < 3) {
+      return [
+        [
+          ...concatHoriz(
+            ctr1(),
+          ),
+          ...concatHoriz(
+            spacing(3 - ai),
+            a,
+            spacing(4 - a[0]!.length + ai),
+          ),
+        ],
+        3,
+        au.map(([t, l]: [Aux, number]) => [t, l + 3 - ai]),
+      ]
+    } else {
+      return [
+        [
+          ...concatHoriz(
+            spacing(ai - 3),
+            ctr1(),
+            spacing(a[0]!.length - ai - 4),
+          ),
+          ...a,
+        ],
+        ai,
+        au,
+      ]
+    }
+  }
   const [a, ai, au] = drawTree(tree.left, left)
   const [b, bi, bu] = drawTree(tree.right, left + a[0]!.length + 1)
   return [

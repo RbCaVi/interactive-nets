@@ -10,6 +10,9 @@ export function printNet(net: Net) {
 
   function printTree(tree: Tree): string {
     if (tree.type === "nil") return "*"
+    if (tree.type === "one") {
+      return `<${printTree(tree.down)}>`
+    }
     if (tree.type === "two") {
       const [open, close] = tree.tag === 0 ? "()" : tree.tag === 1 ? "[]" : [`{${tree.tag} `, "}"]
       return `${open}${printTree(tree.left)} ${printTree(tree.right)}${close}`
